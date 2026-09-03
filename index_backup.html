@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Bodar - Portfolio</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        const canvas = document.getElementById('scroll-canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        
+        const frameCount = 240;
+        const images = [];
+        let imagesLoaded = 0;
+        const loadingText = document.getElementById('loading-text');
+        const loader = document.getElementById('loader');
+        let animationStarted = false;
+
+        const state = {
+            frame: 0,
+            targetFrame: 0,
+            lastRenderedFrame: -1
+        };
+
+        function resizeCanvas() {
+            const dpr = 1; // Optimized for 60fps scrolling
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            
+            state.lastRenderedFrame = -1;
+            
+            const currentFrameIndex = Math.min(frameCount - 1, Math.max(0, Math.round(state.frame)));
+            const currentImg = images[currentFrameIndex];
+            
+            if (currentImg && currentImg.complete) {
+                render(currentImg);
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function preloadImages() {
+            for (let i = 0; i < frameCount; i++) {
+                const img = new Image();
+                const frameNumber = (i + 1).toString().padStart(6, '0');
+                img.src = `./frames/frame_${frameNumber}.jpg`;
+                
+                const onImageReady = () => {
+                    imagesLoaded++;
+                    loadingText.innerText = `${Math.round((imagesLoaded / frameCount) * 100)}%`;
+                    
+                    if (imagesLoaded === 1) {
+                        resizeCanvas();
+                    }
+                    
+                    if (imagesLoaded === frameCount && !animationStarted) {
+                        animationStarted = true;
+                        loader.style.opacity = '0';
+                        setTimeout(() => { loader.style.display = 'none'; }, 800);
+                        startAnimation();
+                    }
+                };
+
+                img.onload = onImageReady;
+                img.onerror = () => {
+                    imagesLoaded++; 
+                    if (imagesLoaded === frameCount && !animationStarted) {
+                        animationStarted = true;
+                        loader.style.opacity = '0';
+                        setTimeout(() => { loader.style.display = 'none'; }, 800);
+                        startAnimation();
+                    }
+                };
+
+                images.push(img);
+            }
+        }
+
+        function render(img) {
+            if (!img || !img.complete) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const canvasRatio = canvas.width / canvas.height;
+            const imgRatio = img.width / img.height;
+            
+            let drawWidth = canvas.width;
+            let drawHeight = canvas.height;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (canvasRatio > imgRatio) {
+                drawHeight = canvas.width / imgRatio;
+                offsetY = (canvas.height - drawHeight) / 2;
+                drawWidth = canvas.width;
+            } else {
+                drawWidth = canvas.height * imgRatio;
+                offsetX = (canvas.width - drawWidth) / 2;
+                drawHeight = canvas.height;
+            }
+
+            ctx.imageSmoothingEnabled = true;
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollFraction = Math.max(0, Math.min(1, scrollTop / maxScroll));
+            
+            state.targetFrame = scrollFraction * (frameCount - 1);
+
+            // Professionally vanish the hero text on scroll
+            const heroTextBg = document.getElementById('hero-text-bg');
+            if (heroTextBg) {
+                const fadePoint = window.innerHeight * 0.4; 
+                let opacity = 1 - (scrollTop / fadePoint);
+                if (opacity < 0) opacity = 0;
+                
+                heroTextBg.style.opacity = opacity;
+                heroTextBg.style.transform = `translateY(${scrollTop * -0.4}px) scale(${1 + (scrollTop * 0.0005)})`;
+            }
+        }, { passive: true });
+
+        function startAnimation() {
+            // Intersection Observer for scroll animations
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.reveal').forEach(el => {
+                observer.observe(el);
+            });
+
+            function loop() {
+                // Smooth easing
+                state.frame += (state.targetFrame - state.frame) * 0.1;
+                
+                const currentFrameIndex = Math.min(frameCount - 1, Math.max(0, Math.round(state.frame)));
+                
+                if (currentFrameIndex !== state.lastRenderedFrame) {
+                    const currentImg = images[currentFrameIndex];
+                    if (currentImg && currentImg.complete) {
+                        render(currentImg);
+                        state.lastRenderedFrame = currentFrameIndex;
+                    }
+                }
+                
+                requestAnimationFrame(loop);
+            }
+            
+            loop();
+        }
+
+        preloadImages();
+</script>
+    
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overscroll-behavior: none; 
+            color: #fff;
+        }
+
+        
+
+        
+
+        
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 0;
+            background-color: #050505;
+            pointer-events: none;
+        }
+
+        /* Loading indicator */
+        #loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            z-index: 100;
+            transition: opacity 0.8s ease;
+            display: flex;
+            align-items: center;
+        }
+        .spinner {
+            width: 24px; height: 24px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            border-top-color: #E55B23;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Marquee animation */
+        .marquee-content {
+            display: flex;
+            animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Glassmorphism utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .huge-text {
+            font-size: clamp(6rem, 15vw, 15rem);
+            line-height: 0.8;
+            text-transform: uppercase;
+            mix-blend-mode: overlay;
+            opacity: 0.9;
+        }
+    
+        /* Smooth Reveal Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 100ms; }
+        .reveal-delay-2 { transition-delay: 200ms; }
+        .reveal-delay-3 { transition-delay: 300ms; }
+        .reveal-delay-4 { transition-delay: 400ms; }
+
+    </style>
+</head>
+<body class="antialiased selection:bg-brand selection:text-white">
+
+    
+    <!-- Loader -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <span id="loading-text">0%</span>
+    </div>
+    
+    <!-- Background Canvas -->
+    <div class="canvas-container">
+        <canvas id="scroll-canvas"></canvas>
+    </div>
+
+    <!-- Centered Huge Text Background -->
+    <div id="hero-text-bg" class="fixed top-0 left-0 w-full h-full flex flex-col items-center justify-center pointer-events-none " style="z-index: 5; transition: opacity 0.1s ease-out, transform 0.1s ease-out;">
+        <h1 class="huge-text font-display text-white text-center">Lucky Bodar</h1>
+    </div>
+
+    
+    <!-- Main UI Overlay -->
+    <div class="relative z-10 w-full">
+
+        <!-- Navbar -->
+        <nav class="fixed top-0 left-0 w-full px-8 py-6 flex justify-between items-center z-50 pointer-events-none">
+            <!-- Logo -->
+            <div class="font-display text-2xl tracking-wide pointer-events-auto cursor-pointer">
+                Portfolio
+            </div>
+
+            <!-- Center Pills -->
+            <div class="hidden md:flex items-center gap-6 glass rounded-full px-6 py-3 text-sm font-medium pointer-events-auto">
+                <a href="#" class="hover:text-brand transition-colors bg-white text-black px-4 py-1.5 rounded-full">About</a>
+                <a href="#" class="hover:text-brand transition-colors text-white/80 hover:text-white">Projects</a>
+                <a href="#" class="hover:text-brand transition-colors text-white/80 hover:text-white">Services</a>
+                <a href="#" class="hover:text-brand transition-colors text-white/80 hover:text-white">Testimonials</a>
+                <a href="#" class="hover:text-brand transition-colors text-white/80 hover:text-white">Contact</a>
+            </div>
+
+            <!-- CTA -->
+            <button class="pointer-events-auto bg-brand hover:bg-brandHover text-white px-6 py-3 rounded-full text-sm font-medium flex items-center gap-2 transition-transform hover:scale-105 shadow-lg shadow-brand/20">
+                Start a Project
+                <div class="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                    <svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </div>
+            </button>
+        </nav>
+
+        <!-- Hero Section -->
+        <header class="min-h-screen relative flex flex-col justify-center px-8 pt-20 pb-10">
+
+            <!-- Hero Bottom Elements (Left & Right Cards) -->
+            <div class="mt-auto w-full flex flex-col md:flex-row justify-between items-end gap-8 relative z-10 pointer-events-auto">
+                
+                <!-- Left Info -->
+                <div class="max-w-sm">
+                    <div class="flex items-center gap-2 text-sm text-white/70 mb-3">
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand"></span>
+                        Trusted by 200+ clients
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-display leading-tight mb-6">Websites that turn visitors into clients</h2>
+                    <div class="flex items-center gap-4">
+                        <button class="bg-brand hover:bg-brandHover text-white px-5 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 transition-transform hover:scale-105">
+                            Start a Project
+                            <div class="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                                <svg class="w-2.5 h-2.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                        </button>
+                        <a href="#" class="text-sm font-medium hover:text-brand transition-colors flex items-center gap-1">
+                            View My Work 
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Card -->
+                <div class="glass p-5 rounded-3xl max-w-[280px] border border-white/10 shadow-glass relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-brand/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex items-center mb-3">
+                        <div class="flex -space-x-2">
+                            <!-- Placeholder Avatars -->
+                            <img class="w-8 h-8 rounded-full border-2 border-dark" src="https://i.pravatar.cc/100?img=1" alt="Client">
+                            <img class="w-8 h-8 rounded-full border-2 border-dark" src="https://i.pravatar.cc/100?img=2" alt="Client">
+                            <img class="w-8 h-8 rounded-full border-2 border-dark" src="https://i.pravatar.cc/100?img=3" alt="Client">
+                            <img class="w-8 h-8 rounded-full border-2 border-dark" src="https://i.pravatar.cc/100?img=4" alt="Client">
+                            <div class="w-8 h-8 rounded-full border-2 border-dark bg-white text-dark flex items-center justify-center text-xs font-bold">+</div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-white/80 font-medium mb-4">99.8% Of My Clients Are Satisfied<br><span class="text-white/50">— Be One Of Them Today.</span></p>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] uppercase tracking-wider font-semibold bg-white/10 px-2 py-1 rounded-md">Free Consultation</span>
+                        <span class="text-[10px] uppercase tracking-wider font-semibold bg-white/10 px-2 py-1 rounded-md">24h Response</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Marquee -->
+        <div class="w-full overflow-hidden border-y border-white/5 bg-black/40 backdrop-blur-md py-4 pointer-events-auto">
+            <div class="marquee-content w-max flex items-center font-display text-2xl tracking-widest text-white/90" style="animation-duration: 30s;">
+                <div class="flex items-center gap-16 pr-16">
+                    <span>3+ YEARS EXPERIENCE</span>
+                    <span class="text-brand">✦</span>
+                    <span>300+ PROJECTS DELIVERED</span>
+                    <span class="text-brand">✦</span>
+                    <span>99% CLIENT SATISFACTION</span>
+                    <span class="text-brand">✦</span>
+                    <span>ENTERPRISE AI SOLUTIONS</span>
+                    <span class="text-brand">✦</span>
+                    <span>PRECISION DESIGN</span>
+                    <span class="text-brand">✦</span>
+                    <span>GLOBAL CLIENTELE</span>
+                    <span class="text-brand">✦</span>
+                    <span>TECHNICAL EXCELLENCE</span>
+                    <span class="text-brand">✦</span>
+                </div>
+                <div class="flex items-center gap-16 pr-16">
+                    <span>3+ YEARS EXPERIENCE</span>
+                    <span class="text-brand">✦</span>
+                    <span>300+ PROJECTS DELIVERED</span>
+                    <span class="text-brand">✦</span>
+                    <span>99% CLIENT SATISFACTION</span>
+                    <span class="text-brand">✦</span>
+                    <span>ENTERPRISE AI SOLUTIONS</span>
+                    <span class="text-brand">✦</span>
+                    <span>PRECISION DESIGN</span>
+                    <span class="text-brand">✦</span>
+                    <span>GLOBAL CLIENTELE</span>
+                    <span class="text-brand">✦</span>
+                    <span>TECHNICAL EXCELLENCE</span>
+                    <span class="text-brand">✦</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <section class="max-w-6xl mx-auto px-8 py-32 pointer-events-auto">
+            <div class="flex flex-col md:flex-row gap-12 md:gap-24 items-start">
+                <div class="flex items-center gap-2 text-sm text-white/50 font-medium uppercase tracking-widest whitespace-nowrap">
+                    <span class="w-1.5 h-1.5 rounded-full bg-brand"></span>
+                    About Me
+                </div>
+                <div class="reveal reveal-delay-1 flex-1">
+                    <h3 class="font-sans text-2xl md:text-4xl font-light leading-[1.4] tracking-tight text-white/90 mb-8">
+                        Hey there, I'm <span class="font-medium text-white">Lucky Bodar</span> — Web Developer • Designer • AI Developer — building sleek websites & smart AI solutions that merge design, code, & innovation into seamless digital experiences. I build systems designed to scale your business and dominate your niche.
+                    </h3>
+                    <div class="flex items-center gap-4">
+                        <button class="bg-brand hover:bg-brandHover text-white px-5 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 transition-transform hover:scale-105">
+                            Start a Project
+                            <div class="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                                <svg class="w-2.5 h-2.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                        </button>
+                        <a href="#" class="text-sm font-medium hover:text-brand transition-colors flex items-center gap-1">
+                            View My Work 
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brand Logos Marquee -->
+        <section class="border-y border-white/5 bg-black/40 backdrop-blur-sm py-12 pointer-events-auto overflow-hidden">
+            <div class="marquee-content w-max flex items-center font-display text-2xl tracking-widest text-white/50 grayscale hover:grayscale-0 transition-all duration-500 hover:text-white/80" style="animation-duration: 30s;">
+                <div class="flex items-center gap-24 pr-24">
+                    <span class="font-bold tracking-wider">BLISTEX</span>
+                    <span class="font-bold tracking-tighter">DIXIE DOWNS</span>
+                    <span class="font-bold text-teal-400">rogue</span>
+                    <span class="font-serif italic font-light">Perfect</span>
+                    <span class="font-bold tracking-widest">CD.PET</span>
+                    <span class="font-bold text-brand">Trava</span>
+                    <span class="font-bold tracking-widest">LUMINA</span>
+                    <span class="font-bold italic">APEX</span>
+                    <span class="font-bold tracking-wider">NOVA</span>
+                    <span class="font-bold">VANGUARD</span>
+                </div>
+                <div class="flex items-center gap-24 pr-24">
+                    <span class="font-bold tracking-wider">BLISTEX</span>
+                    <span class="font-bold tracking-tighter">DIXIE DOWNS</span>
+                    <span class="font-bold text-teal-400">rogue</span>
+                    <span class="font-serif italic font-light">Perfect</span>
+                    <span class="font-bold tracking-widest">CD.PET</span>
+                    <span class="font-bold text-brand">Trava</span>
+                    <span class="font-bold tracking-widest">LUMINA</span>
+                    <span class="font-bold italic">APEX</span>
+                    <span class="font-bold tracking-wider">NOVA</span>
+                    <span class="font-bold">VANGUARD</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section class="max-w-6xl mx-auto px-8 py-32 pointer-events-auto bg-black/60 backdrop-blur-md rounded-[3rem] mt-24 mb-32 border border-white/5">
+            <div class="mb-16">
+                <div class="flex items-center gap-2 text-xs text-brand font-medium uppercase tracking-widest mb-3">
+                    <span class="w-1 h-1 rounded-full bg-brand"></span>
+                    Some Recent Projects
+                </div>
+                <h2 class="font-display text-4xl md:text-5xl">Selected Work That Delivers Results</h2>
+            </div>
+
+            <div class="reveal grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                <!-- Project 1 -->
+                <div class="group cursor-pointer">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-800 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/project1.jpg" alt="Lawyer Landing Page" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="text-2xl font-display mb-2 group-hover:text-brand transition-colors">Lawyer Alexander's Landing Page</h3>
+                    <p class="text-white/60 text-sm mb-4">Designed To Turn Visitors Into Consultation Bookings.</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Web Design</span>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="group cursor-pointer md:mt-16">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-blue-900/50 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/project2.jpg" alt="Trava Website" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="text-2xl font-display mb-2 group-hover:text-brand transition-colors">KeyPharma Company's Trava Product Website</h3>
+                    <p class="text-white/60 text-sm mb-4">Built To Guide Customers From Discovery To Purchase.</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Web Development</span>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="group cursor-pointer">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-green-900/30 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/project3.jpg" alt="Marketing Agency" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="text-2xl font-display mb-2 group-hover:text-brand transition-colors">Hebrew Marketing Agency's Website</h3>
+                    <p class="text-white/60 text-sm mb-4">Showcases services and attracts new business clients.</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Web Development</span>
+                </div>
+                
+                <!-- Project 4 -->
+                <div class="group cursor-pointer md:mt-16">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-800 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/project4.jpg" alt="Legal Landing Page" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="text-2xl font-display mb-2 group-hover:text-brand transition-colors">Robert's Legal Landing Page</h3>
+                    <p class="text-white/60 text-sm mb-4">Converts first-time visitors into legal leads.</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Web Design</span>
+                </div>
+            </div>
+        </section>
+        <!-- Testimonials Section -->
+        <section class="max-w-6xl mx-auto px-8 py-24 pointer-events-auto">
+            <div class="mb-16 text-center">
+                <div class="flex items-center justify-center gap-2 text-xs text-brand font-medium uppercase tracking-widest mb-3">
+                    <span class="w-1 h-1 rounded-full bg-brand"></span>
+                    Testimonials
+                    <span class="w-1 h-1 rounded-full bg-brand"></span>
+                </div>
+                <h2 class="font-display text-4xl md:text-5xl">What My Clients Say</h2>
+            </div>
+                        <div class="reveal reveal-delay-1 w-full overflow-hidden">
+                <div class="marquee-content w-max hover:[animation-play-state:paused]" style="animation-duration: 40s;">
+                    <div class="flex gap-8 px-4">
+
+                <!-- Testimonial 1 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"Lucky completely transformed our online presence. The new landing page increased our consultation bookings by over 150% in just the first month. Incredible work!"</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=11" alt="Alexander" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">Alexander M.</h4>
+                            <p class="text-xs text-white/50">Managing Partner, Legal</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"Not only is the design absolutely gorgeous, but the code is flawless. We needed a high-converting pharma site, and he delivered beyond our expectations."</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=32" alt="Sarah" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">Sarah Jenkins</h4>
+                            <p class="text-xs text-white/50">CMO, KeyPharma</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"The level of detail and modern aesthetic he brought to our agency's portfolio was mind-blowing. The animations are so smooth. Highly recommend!"</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=12" alt="David" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">David Cohen</h4>
+                            <p class="text-xs text-white/50">Founder, Marketing Agency</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 4 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"Working with Lucky was a masterclass in modern digital design. Our new firm website exudes authority and has dramatically increased client trust."</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=52" alt="Robert" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">Robert F.</h4>
+                            <p class="text-xs text-white/50">Senior Partner, Robert's Legal</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 5 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"The AI integrations Lucky built into our platform have saved us hundreds of hours. An exceptional developer who truly understands business scale."</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=44" alt="Emily" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">Emily R.</h4>
+                            <p class="text-xs text-white/50">CEO, TechFlow</p>
+                        </div>
+                    </div>
+                </div>
+
+                    </div>
+                    <div class="flex gap-8 px-4">
+
+                <!-- Testimonial 1 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"Lucky completely transformed our online presence. The new landing page increased our consultation bookings by over 150% in just the first month. Incredible work!"</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=11" alt="Alexander" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">Alexander M.</h4>
+                            <p class="text-xs text-white/50">Managing Partner, Legal</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"Not only is the design absolutely gorgeous, but the code is flawless. We needed a high-converting pharma site, and he delivered beyond our expectations."</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=32" alt="Sarah" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">Sarah Jenkins</h4>
+                            <p class="text-xs text-white/50">CMO, KeyPharma</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"The level of detail and modern aesthetic he brought to our agency's portfolio was mind-blowing. The animations are so smooth. Highly recommend!"</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=12" alt="David" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">David Cohen</h4>
+                            <p class="text-xs text-white/50">Founder, Marketing Agency</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 4 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"Working with Lucky was a masterclass in modern digital design. Our new firm website exudes authority and has dramatically increased client trust."</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=52" alt="Robert" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">Robert F.</h4>
+                            <p class="text-xs text-white/50">Senior Partner, Robert's Legal</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 5 -->
+                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand/50 transition-colors w-[400px] flex-shrink-0 whitespace-normal">
+
+                    <div class="flex gap-1 text-brand mb-6">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <p class="text-white/80 mb-8 italic text-lg">"The AI integrations Lucky built into our platform have saved us hundreds of hours. An exceptional developer who truly understands business scale."</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.pravatar.cc/150?img=44" alt="Emily" class="w-12 h-12 rounded-full border-2 border-brand">
+                        <div>
+                            <h4 class="font-bold">Emily R.</h4>
+                            <p class="text-xs text-white/50">CEO, TechFlow</p>
+                        </div>
+                    </div>
+                </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Footer -->
+        <footer class="border-t border-white/10 bg-black/80 backdrop-blur-md pt-16 pb-8 pointer-events-auto">
+            <div class="max-w-6xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="font-display text-2xl tracking-wide">
+                    Portfolio
+                </div>
+                <div class="flex gap-6 text-sm text-white/60">
+                    <a href="#" class="hover:text-brand transition-colors">Twitter</a>
+                    <a href="#" class="hover:text-brand transition-colors">LinkedIn</a>
+                    <a href="#" class="hover:text-brand transition-colors">Dribbble</a>
+                    <a href="#" class="hover:text-brand transition-colors">Github</a>
+                </div>
+            </div>
+            <div class="max-w-6xl mx-auto px-8 mt-12 text-center text-xs text-white/40">
+                &copy; 2026 Lucky Bodar. All rights reserved. Built with passion and code.
+            </div>
+        </footer>
+        
+    </div>
+
+    <!-- Script for background canvas animation -->
+    <script>
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.reveal').forEach(el => {
+                observer.observe(el);
+            });
+        });
+
+        // Professionally vanish the hero text on scroll
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            const heroTextBg = document.getElementById('hero-text-bg');
+            if (heroTextBg) {
+                // Fade out completely by the time they scroll 40% of a screen height
+                const fadePoint = window.innerHeight * 0.4; 
+                let opacity = 1 - (scrollTop / fadePoint);
+                if (opacity < 0) opacity = 0;
+                
+                heroTextBg.style.opacity = opacity;
+                heroTextBg.style.transform = `translateY(${scrollTop * -0.4}px) scale(${1 + (scrollTop * 0.0005)})`;
+            }
+        }, { passive: true });
+</script>
+</body>
+</html>

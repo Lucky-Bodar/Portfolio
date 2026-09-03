@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Projects - Lucky Bodar</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#E55B23', // Bright orange
+                        brandHover: '#d14d1a',
+                        dark: '#050505',
+                        darkPanel: '#111111',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Anton', 'sans-serif'],
+                        aesthetic: ['"Cinzel"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: white; }
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease forwards;
+        }
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand selection:text-white">
+
+    <!-- Navbar -->
+    <nav class="absolute top-0 left-0 w-full px-8 py-6 flex justify-between items-center z-50 pointer-events-none">
+            <!-- Logo -->
+            <div class="font-sans font-light tracking-[0.2em] text-2xl uppercase pointer-events-auto cursor-pointer transition-all duration-300 hover:scale-110 hover:-translate-y-1 hover:text-white text-white/90 drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)] hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]" onclick="window.location.href='index.html'">
+                Portfolio
+            </div>
+
+            <!-- Center Pills -->
+            <div class="hidden md:flex items-center gap-2 glass rounded-full px-4 py-2 text-sm font-medium pointer-events-auto">
+                <a href="about.html" class="px-4 py-1.5 rounded-full transition-all duration-300 text-white/80 hover:bg-white hover:text-black hover:scale-105">About</a>
+                <a href="projects.html" class="px-4 py-1.5 rounded-full transition-all duration-300 text-white/80 hover:bg-white hover:text-black hover:scale-105 bg-white text-black scale-105">Projects</a>
+                <a href="#services" class="px-4 py-1.5 rounded-full transition-all duration-300 text-white/80 hover:bg-white hover:text-black hover:scale-105">Services</a>
+                <a href="#testimonials" class="px-4 py-1.5 rounded-full transition-all duration-300 text-white/80 hover:bg-white hover:text-black hover:scale-105">Testimonials</a>
+                <a href="contact.html" class="px-4 py-1.5 rounded-full transition-all duration-300 text-white/80 hover:bg-white hover:text-black hover:scale-105">Contact</a>
+            </div>
+
+            
+        </nav>
+
+    <!-- Projects Section -->
+        <section  class="max-w-6xl mx-auto px-8 py-32 pointer-events-auto mt-32">
+            <div class="mb-16">
+                <div class="flex items-center gap-2 text-xs text-brand font-medium uppercase tracking-widest mb-3">
+                    <span class="w-1 h-1 rounded-full bg-brand"></span>
+                    Some Recent Projects
+                </div>
+                <h2 class="font-display text-4xl md:text-5xl">Selected Work That Delivers Results</h2>
+            </div>
+
+            <div class="reveal grid grid-cols-1 max-w-4xl mx-auto gap-20 md:gap-32">
+                <!-- Project 1 -->
+                <div class="group cursor-pointer mb-24">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-800 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/project1.jpg" alt="Lawyer Landing Page" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="mt-6 text-2xl font-display mb-2 group-hover:text-brand transition-colors">Lawyer Alexander's Landing Page</h3>
+                    <p class="text-white/60 text-sm mb-4">Designed To Turn Visitors Into Consultation Bookings.</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Web Design</span>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="group cursor-pointer mb-24">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-blue-900/50 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/project2.jpg" alt="Trava Website" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="mt-6 text-2xl font-display mb-2 group-hover:text-brand transition-colors">KeyPharma Company's Trava Product Website</h3>
+                    <p class="text-white/60 text-sm mb-4">Built To Guide Customers From Discovery To Purchase.</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Web Development</span>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="group cursor-pointer mb-24">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-green-900/30 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/project3.jpg" alt="Marketing Agency" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="mt-6 text-2xl font-display mb-2 group-hover:text-brand transition-colors">Hebrew Marketing Agency's Website</h3>
+                    <p class="text-white/60 text-sm mb-4">Showcases services and attracts new business clients.</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Web Development</span>
+                </div>
+                
+                <!-- Project 4 -->
+                <div class="group cursor-pointer mb-24">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-800 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/project4.jpg" alt="Legal Landing Page" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="mt-6 text-2xl font-display mb-2 group-hover:text-brand transition-colors">Robert's Legal Landing Page</h3>
+                    <p class="text-white/60 text-sm mb-4">Converts first-time visitors into legal leads.</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Web Design</span>
+                </div>
+            </div>
+
+                <!-- Project 5 -->
+                <div class="group cursor-pointer mb-24">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-800 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        
+        <div class="flex w-full h-full rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity overflow-hidden">
+            <img src="./images/express1.png" class="w-1/2 h-full object-cover">
+            <img src="./images/express2.png" class="w-1/2 h-full object-cover">
+        </div>
+    
+                    </div>
+                    <h3 class="mt-6 text-2xl font-display mb-2 group-hover:text-brand transition-colors">Express — Luxury Credit Platform</h3>
+                    <p class="text-white/60 text-sm mb-4">Financial Lifestyle Web Application</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">Fintech Platform</span>
+                </div>
+
+                <!-- Project 6 -->
+                <div class="group cursor-pointer mb-24">
+                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-800 to-neutral-900 mb-6 aspect-[4/3] flex items-center justify-center p-8 border border-white/5 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="./images/brevita.png" alt="Brevita Coffee Journey" class="w-full h-full object-cover rounded-xl shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <h3 class="mt-6 text-2xl font-display mb-2 group-hover:text-brand transition-colors">Brevita</h3>
+                    <p class="text-white/60 text-sm mb-4">A Curated Journey Through the World's Finest Coffees, Cuisines & Cheesecakes</p>
+                    <span class="text-[10px] border border-white/20 px-3 py-1 rounded-full uppercase tracking-wider text-white/80">E-Commerce</span>
+                </div>
+
+        </section>
+
+</body>
+</html><script>
+    const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animation = 'fadeInUp 1s ease forwards';
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.group.cursor-pointer').forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.animationDelay = `${index * 100}ms`;
+        observer.observe(el);
+    });
+</script>
